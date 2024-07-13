@@ -1,0 +1,78 @@
+@Library('my_library') _
+
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE_NAME = 'harshaprakash/main'
+        DOCKER_IMAGE_TAG = 'latest'
+        DOCKERFILE_PATH = './Dockerfile'
+    }
+
+    stages{
+        stage('Checkout') {
+            steps {
+                script {
+                    def config = [
+                        url: 'https://github.com/harshaprakash100/ip_app.git',
+                        branch: 'main',
+                        credentialsId: 'github_hp'
+                    ]
+
+                    gitCheckout(config)
+                }
+            }
+        }
+
+        stage('SonarScan') {
+            steps {
+                script {
+                    withSonarQubeEnv('sonar_server') {
+                        sh """
+                            /var/opt/sonar-scanner-aarch64/bin/sonar-scanner
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Docker build') {
+
+            steps {
+               script {
+                    buildAndPushDockerImage(
+                        'docker_hp',
+                        DOCKER_IMAGE_NAME,
+                        DOCKER_IMAGE_TAG,
+                        DOCKERFILE_PATH
+                    )
+               }
+            }
+        }
+
+        stage('Scan Docker Image with Trivy') {
+
+            steps {
+               script {
+                    trivyScan(
+                        DOCKER_IMAGE_NAME,
+                        DOCKER_IMAGE_TAG
+                    )
+               }
+            }
+        }
+    }
+
+    post {
+        always {
+            publishHTML (target : [allowMissing: false,
+                            alwaysLinkToLastBuild: false,
+                            keepAll: false,
+                            reportDir: '.',
+                            reportFiles: 'trivy_report.html',
+                            reportName: 'IP_APP_TRIVY_RESULTS',
+                            reportTitles: 'IP_APP_TRIVY_RESULTS'])
+            cleanWs()
+        }
+    }
+}
