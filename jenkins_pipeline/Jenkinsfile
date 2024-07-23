@@ -14,7 +14,7 @@ pipeline {
             steps {
                 script {
                     def config = [
-                        url: 'https://github.com/https://github.com/Vithal-Angadi/CICD.git',
+                        url: 'https://github.com/Vithal-Angadi/CICD.git',
                         branch: 'main',
                         
                     ]
