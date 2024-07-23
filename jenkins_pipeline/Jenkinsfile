@@ -14,7 +14,7 @@ pipeline {
             steps {
                 script {
                     def config = [
-                        url: 'https://github.com/Vithal-Angadi/CICD/ip_app.git',
+                        url: 'https://github.com/harshaprakash100/ip_app.git',
                         branch: 'main',
                         credentialsId: 'github_hp'
                     ]
